@@ -6,11 +6,12 @@
 #define BLOCKCOUNT 50
 
 size_t WINX=BLOCKCOUNT*BLOCKSIZE, WINY=BLOCKCOUNT*BLOCKSIZE;
-float FPS = 60;
+float FPS = 10;
 
 
 class GameMap: public DrawableObject {
-    int map[BLOCKCOUNT][BLOCKCOUNT];
+    int map0[BLOCKCOUNT][BLOCKCOUNT], map1[BLOCKCOUNT][BLOCKCOUNT];
+    int curr = 0;
 public:
     GameMap() {
         ObjectsToDraw.push_back(this);
@@ -18,7 +19,7 @@ public:
         srand(time(NULL));
         for (int i=0; i<BLOCKCOUNT; i++) {
             for (int j=0; j<BLOCKCOUNT; j++) {
-                map[i][j] = rand()%15 == 1;
+                map0[i][j] = rand()%8 == 1;
             }
         }
     }
@@ -28,19 +29,61 @@ public:
     }
     void update() {
         int n;
-        for (int i=0; i<BLOCKCOUNT; i++) {
-            for (int j=0; j<BLOCKCOUNT; j++) {
-                n = neighbours(i,j);
-                if (map[i][j]) {
-                    map[i][j] = n==2 || n==3;
-                } else {
-                    map[i][j] = n==3;
+        if (curr) {
+            for (int i=0; i<BLOCKCOUNT; i++) {
+                for (int j=0; j<BLOCKCOUNT; j++) {
+                    n = neighbours(i,j);
+                    if (map1[i][j]) {
+                        map0[i][j] = n==2 || n==3;
+                    } else {
+                        map0[i][j] = n==3;
+                    }
+                    //if (n==5) map[i][j] = 2;
                 }
-                //if (n==5) map[i][j] = 2;
+            }
+        } else {
+            for (int i=0; i<BLOCKCOUNT; i++) {
+                for (int j=0; j<BLOCKCOUNT; j++) {
+                    n = neighbours(i,j);
+                    if (map0[i][j]) {
+                        map1[i][j] = n==2 || n==3;
+                    } else {
+                        map1[i][j] = n==3;
+                    }
+                    //if (n==5) map[i][j] = 2;
+                }
             }
         }
+
+        curr = (curr+1) % 2;
     }
 
+    int neighbours(int y, int x) {
+        int s = 0;
+        if (curr) {
+            for (int i=y-1; i<y+2; i++) {
+                for (int j=x-1; j<x+2; j++) {
+                    if ( (i==y && j==x)
+                        || i < 0 || i > BLOCKCOUNT
+                        || j < 0 || j > BLOCKCOUNT) continue;
+                
+                    s += map1[i][j];
+                }
+            }
+        } else {
+            for (int i=y-1; i<y+2; i++) {
+                for (int j=x-1; j<x+2; j++) {
+                    if ( (i==y && j==x)
+                        || i < 0 || i > BLOCKCOUNT
+                        || j < 0 || j > BLOCKCOUNT) continue;
+                
+                    s += map0[i][j];
+                }
+            }
+        }
+        return s;
+    }
+    
     void draw() override {
         for (int i=0; i<BLOCKCOUNT; i++) {
             draw_line({i*BLOCKSIZE, 0}, {i*BLOCKSIZE, WINY}, {0,0,0}, 3);
@@ -49,25 +92,19 @@ public:
             draw_line({0, i*BLOCKSIZE}, {WINX, i*BLOCKSIZE}, {0,0,0}, 3);
         }
         
-        for (int i=0; i<BLOCKCOUNT; i++) {
-            for (int j=0; j<BLOCKCOUNT; j++) {
-                draw_filled_rect({i*BLOCKSIZE, j*BLOCKSIZE}, BLOCKSIZE, BLOCKSIZE, {0, 0, 0.1f + ((map[i][j]) ? (1/3.0f + (float)(i+j)/3/BLOCKCOUNT) : 0)});
+        if (curr){    
+            for (int i=0; i<BLOCKCOUNT; i++) {
+                for (int j=0; j<BLOCKCOUNT; j++) {
+                    draw_filled_rect({i*BLOCKSIZE, j*BLOCKSIZE}, BLOCKSIZE, BLOCKSIZE, {0, 0, 0.1f + ((map1[i][j]) ? (1/3.0f + (float)(i+j)/3/BLOCKCOUNT) : 0)});
+                }
+            }
+        } else {
+            for (int i=0; i<BLOCKCOUNT; i++) {
+                for (int j=0; j<BLOCKCOUNT; j++) {
+                    draw_filled_rect({i*BLOCKSIZE, j*BLOCKSIZE}, BLOCKSIZE, BLOCKSIZE, {0, 0, 0.1f + ((map0[i][j]) ? (1/3.0f + (float)(i+j)/3/BLOCKCOUNT) : 0)});
+                }
             }
         }
-    }
-
-    int neighbours(int y, int x) {
-        int s = 0;
-        for (int i=y-1; i<y+2; i++) {
-            for (int j=x-1; j<x+2; j++) {
-                if ( (i==y && j==x)
-                    || i < 0 || i > BLOCKCOUNT
-                    || j < 0 || j > BLOCKCOUNT) continue;
-            
-                s += map[i][j];
-            }
-        }
-        return s;
     }
 };
 
