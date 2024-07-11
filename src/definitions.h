@@ -37,8 +37,8 @@ struct Point {
     }
 };
 struct Color {
-    int r, g, b;
-    int a = 0;
+    float r, g, b;
+    float a = 0;
 };
 
 

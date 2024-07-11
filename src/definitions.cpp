@@ -2,6 +2,8 @@
 
 std::vector<DrawableObject*> ObjectsToDraw;
 
+unsigned int delaytime = 1000000/FPS;
+
 void RemoveFromVector(DrawableObject* item, std::vector<DrawableObject*>& vector) {
     for (auto it = vector.begin(); it != vector.end(); it++) {
         if (*it == item) {

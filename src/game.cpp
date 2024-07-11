@@ -1,61 +1,86 @@
 #include "definitions.h"
+#include <random>
+#include <time.h>
 
-size_t WINX=700, WINY=700;
+#define BLOCKSIZE 10
+#define BLOCKCOUNT 50
+
+size_t WINX=BLOCKCOUNT*BLOCKSIZE, WINY=BLOCKCOUNT*BLOCKSIZE;
 float FPS = 60;
-unsigned int delaytime = 1000000/FPS;
 
 
-Point p1, p2;
-size_t tm = 0;
-size_t pad = -50;
-
-class OBJ: public DrawableObject {
+class GameMap: public DrawableObject {
+    int map[BLOCKCOUNT][BLOCKCOUNT];
 public:
-    Point p1, p2;
-    size_t length =  -pad + (WINX > WINY ? WINY : WINX)/3;
-    OBJ() {
-        std::cout << "Const!" << std::endl;
+    GameMap() {
         ObjectsToDraw.push_back(this);
+        
+        srand(time(NULL));
+        for (int i=0; i<BLOCKCOUNT; i++) {
+            for (int j=0; j<BLOCKCOUNT; j++) {
+                map[i][j] = rand()%15 == 1;
+            }
+        }
     }
-    ~OBJ() {
-        std::cout << "Dest!" << std::endl;
+
+    ~GameMap() {
         RemoveFromVector(this);
     }
-    void call() {
-        //if (tm>FPS*6) RemoveFromVector(this);
-        p1.x = WINX/2 + cos((float)tm/30.)*length;
-        p1.y = WINY/2 + sin((float)tm/30.)*length;
-
-        p2.x = WINX - p1.x;
-        p2.y = WINX - p1.y;
+    void update() {
+        int n;
+        for (int i=0; i<BLOCKCOUNT; i++) {
+            for (int j=0; j<BLOCKCOUNT; j++) {
+                n = neighbours(i,j);
+                if (map[i][j]) {
+                    map[i][j] = n==2 || n==3;
+                } else {
+                    map[i][j] = n==3;
+                }
+                //if (n==5) map[i][j] = 2;
+            }
+        }
     }
+
     void draw() override {
-        auto diff = p1-p2;
-        diff = {-diff.y/4, diff.x/4};
-        Point center = {(p1.x+p2.x)/2, (p1.y+p2.y)/2};
-        draw_filled_poly({p1, center+diff, p2, center-diff}, {150,0,0});
-        draw_rect(p1, 100, 50);
-        draw_circle(p2, 50, {0,0,255}, 3, 180);
-        draw_filled_circle({100,100}, 100);
+        for (int i=0; i<BLOCKCOUNT; i++) {
+            draw_line({i*BLOCKSIZE, 0}, {i*BLOCKSIZE, WINY}, {0,0,0}, 3);
+        }
+        for (int i=0; i<BLOCKCOUNT; i++) {
+            draw_line({0, i*BLOCKSIZE}, {WINX, i*BLOCKSIZE}, {0,0,0}, 3);
+        }
+        
+        for (int i=0; i<BLOCKCOUNT; i++) {
+            for (int j=0; j<BLOCKCOUNT; j++) {
+                draw_filled_rect({i*BLOCKSIZE, j*BLOCKSIZE}, BLOCKSIZE, BLOCKSIZE, {0, 0, 0.1f + ((map[i][j]) ? (1/3.0f + (float)(i+j)/3/BLOCKCOUNT) : 0)});
+            }
+        }
+    }
+
+    int neighbours(int y, int x) {
+        int s = 0;
+        for (int i=y-1; i<y+2; i++) {
+            for (int j=x-1; j<x+2; j++) {
+                if ( (i==y && j==x)
+                    || i < 0 || i > BLOCKCOUNT
+                    || j < 0 || j > BLOCKCOUNT) continue;
+            
+                s += map[i][j];
+            }
+        }
+        return s;
     }
 };
 
-OBJ *object;
+
+GameMap *map;
 void prepare() {
+    map = new GameMap;
 }
 
 void call() {
-    if (object) object->call();
-    tm++;
-    if (tm%(6*(int)FPS) == 0) {
-        if (object) delete object;
-        object = nullptr;
-    }
-    else if (tm%(6*(int)FPS) == (int)3*FPS) {
-        if (!object) object = new OBJ();
-    }
+    map->update();
 }
 
 void end() {
-    if (object) delete object;
+    if (map) delete map;
 }
