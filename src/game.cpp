@@ -7,6 +7,8 @@
 
 size_t WINX=BLOCKCOUNT*BLOCKSIZE, WINY=BLOCKCOUNT*BLOCKSIZE;
 float FPS = 10;
+int FPSi = (int)FPS; 
+size_t tm = 0;
 
 
 class GameMap: public DrawableObject {
@@ -16,7 +18,6 @@ public:
     GameMap() {
         ObjectsToDraw.push_back(this);
         
-        srand(time(NULL));
         for (int i=0; i<BLOCKCOUNT; i++) {
             for (int j=0; j<BLOCKCOUNT; j++) {
                 map0[i][j] = rand()%8 == 1;
@@ -86,10 +87,10 @@ public:
     
     void draw() override {
         for (int i=0; i<BLOCKCOUNT; i++) {
-            draw_line({i*BLOCKSIZE, 0}, {i*BLOCKSIZE, WINY}, {0,0,0}, 3);
+            draw_line({i*BLOCKSIZE, 0}, {i*BLOCKSIZE, (int)WINY}, {0,0,0}, 3);
         }
         for (int i=0; i<BLOCKCOUNT; i++) {
-            draw_line({0, i*BLOCKSIZE}, {WINX, i*BLOCKSIZE}, {0,0,0}, 3);
+            draw_line({0, i*BLOCKSIZE}, {(int)WINX, i*BLOCKSIZE}, {0,0,0}, 3);
         }
         
         if (curr){    
@@ -112,12 +113,26 @@ public:
 GameMap *map;
 void prepare() {
     map = new GameMap;
+    srand(time(NULL));
 }
 
 void call() {
+    tm = (tm+1)%FPSi;
     map->update();
 }
 
 void end() {
     if (map) delete map;
+}
+
+void keyboardKeys(unsigned char key, int x, int y) {
+    //if (tm > 4*FPSi/7) return;
+    switch (key) {
+        case 'r': case 'R':
+            if (map) delete map;
+            map = new GameMap;
+            break;
+        default:
+            break;
+    }
 }

@@ -18,6 +18,7 @@ int main(int argc, char **argv)
     glOrtho(0, WINX, 0, WINY, 0, 1);//cоздаем пространство нашей сцены, в данном случае 3D пространство с высотой, шириной и глубиной в 200 едениц.
     glutDisplayFunc(update);//функция которой мы передаем имя функции для отрисовки окна. 
     glutReshapeFunc(reshape);
+    glutKeyboardFunc(keyboardKeys);
 
     prepare();
     glutMainLoop();//запускаем всё проинициализированное, проще говоря та же ф-я main, только в данном случае glut'овская ф-я main.

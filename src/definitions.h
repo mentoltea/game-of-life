@@ -52,6 +52,8 @@ void reshape(int width, int height);
 // sets new window shape
 void force_reshape(int width, int height);
 void setFPS(float FPS);
+void keyboardKeys(unsigned char key, int x, int y);
+
 void display();
 // updates the game (needs to be provided)
 extern void call();
